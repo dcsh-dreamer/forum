@@ -3,7 +3,6 @@ from django.urls import reverse
 from .models import *
 from datetime import datetime
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.contrib.auth.mixins import UserPassesTestMixin
 
 # 討論主題列表
 class TopicList(ListView):
@@ -31,9 +30,14 @@ class TopicView(DetailView):
     def get_context_data(self, **kwargs):
         # 取得回覆資料傳給頁面範本處理
         ctx = super().get_context_data(**kwargs)
-        replies = Reply.objects.filter(topic=self.object)
         ctx['reply_list'] = Reply.objects.filter(topic=self.object)
         return ctx
+
+    def get_object(self):
+        topic = super().get_object()    # 取得欲查看的討論主題
+        topic.hits += 1     # 等同 topic.hits = topic.hits + 1
+        topic.save()
+        return topic
 
 # 回覆討論主題
 class TopicReply(CreateView):
@@ -46,6 +50,7 @@ class TopicReply(CreateView):
         form.instance.topic = topic
         form.instance.author = self.request.user
         topic.replied = datetime.now()  # 更新討論主題回覆時間
+        topic.save()
         return super().form_valid(form)
     
     def get_success_url(self):
