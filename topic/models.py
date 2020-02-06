@@ -24,5 +24,5 @@ class Reply(models.Model):
         return "{} | {}: {}".format(
             self.topic, 
             self.author, 
-            self.created
+            self.content
         )
